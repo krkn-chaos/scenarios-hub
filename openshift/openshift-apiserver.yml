@@ -3,8 +3,6 @@
   config:
     namespace_pattern: ^openshift-apiserver$
     label_selector: app=openshift-apiserver-a
-- id: wait-for-pods
-  config:
-    namespace_pattern: ^openshift-apiserver$
-    label_selector: app=openshift-apiserver-a
-    count: 3
+    krkn_pod_recovery_time: 120
+    exclude_label: "" # excludes pods marked with this label from chaos
+
