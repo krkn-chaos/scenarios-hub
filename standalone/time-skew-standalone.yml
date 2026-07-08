@@ -1,0 +1,37 @@
+#
+# Standalone Time Skew via SSH
+#
+# Purpose:
+#   Skews the system clock on bare-metal or VM hosts via SSH using
+#   timedatectl. Validates that applications handle clock drift without
+#   producing incorrect results, expired tokens, or broken certificates.
+#
+# What it catches:
+#   - TLS certificate validation failures from clock skew
+#   - Token expiry and authentication failures (JWT, OAuth, Kerberos)
+#   - Cron jobs firing at wrong times or being skipped entirely
+#   - Log timestamp disorder breaking log aggregation pipelines
+#   - Database transaction ordering issues from skewed clocks
+#   - Distributed consensus failures (Raft, Paxos) from time disagreement
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - timedatectl available on targets (systemd-based systems)
+#   - NTP will be temporarily disabled during the test
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Adjust duration for how long the clock should stay skewed
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - time_scenarios:
+#            - ../scenarios-hub/standalone/time-skew-standalone.yml
+#
+
+time_scenarios:
+  - action: skew_time                      # skew_time or skew_date
+    targets:
+      - <TARGET_HOST_1>                    # IP or hostname of target
+    ssh_user: root                         # SSH username
+    ssh_private_key: ~/.ssh/id_rsa         # Path to SSH private key
+    duration: 300                          # Duration in seconds to hold the skew
+    disable_ntp: true                      # Disable NTP during test to prevent correction

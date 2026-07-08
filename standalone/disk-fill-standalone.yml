@@ -1,0 +1,36 @@
+#
+# Standalone Disk Fill via SSH
+#
+# Purpose:
+#   Fills disk space on bare-metal or VM hosts via SSH using fallocate.
+#   Validates that applications handle disk exhaustion gracefully with
+#   proper error messages rather than silent data loss or corruption.
+#
+# What it catches:
+#   - Applications that crash instead of returning disk-full errors
+#   - Log files that silently stop writing when disk is full
+#   - Databases that corrupt WAL segments on disk exhaustion
+#   - Container runtimes that fail to pull images or create layers
+#   - /tmp exhaustion breaking application temp file operations
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - fallocate available on targets (part of util-linux)
+#   - Choose fill_path and fill_percentage carefully to avoid host lockout
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Set fill_path to the filesystem you want to fill (e.g. /tmp, /var)
+#   3. Set fill_percentage to a safe value (start low, e.g. 80%)
+#   4. Reference this file in config/config.yaml under chaos_scenarios:
+#        - standalone_disk_fill_scenarios:
+#            - ../scenarios-hub/standalone/disk-fill-standalone.yml
+#
+
+targets:
+  - <TARGET_HOST_1>                        # IP or hostname of target
+ssh_user: root                             # SSH username
+ssh_private_key: ~/.ssh/id_rsa             # Path to SSH private key
+fill_path: /tmp                            # Filesystem path to fill
+fill_percentage: 90                        # Target percentage to fill (0-99)
+duration: 120                              # Duration in seconds before cleanup

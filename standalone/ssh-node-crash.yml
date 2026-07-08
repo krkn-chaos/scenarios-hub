@@ -1,0 +1,39 @@
+#
+# Standalone Node Kernel Crash via SSH
+#
+# Purpose:
+#   Triggers a kernel panic on target hosts via sysrq to simulate a hard
+#   crash. Tests whether the host recovers cleanly from an unplanned
+#   kernel failure, including filesystem journal replay and service restart.
+#
+# What it catches:
+#   - Filesystems that fail to remount after journal replay
+#   - Services that hang during crash recovery (e.g. database lock files)
+#   - Network bonds or LACP that do not renegotiate after crash
+#   - Kernel modules that fail to reload on boot
+#
+# Prerequisites:
+#   - SSH key-based root access to target hosts
+#   - sysrq must be enabled on target (sysctl kernel.sysrq=1)
+#   - Target hosts should have a watchdog or IPMI for guaranteed reboot
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Reference this file in config/config.yaml under chaos_scenarios:
+#        - node_scenarios:
+#            - ../scenarios-hub/standalone/ssh-node-crash.yml
+#
+
+node_scenarios:
+  - actions:
+      - node_crash_scenario
+    cloud_type: ssh
+    targets:
+      - <TARGET_HOST_1>                    # IP or hostname of target
+    ssh_user: root                         # Must be root for sysrq trigger
+    ssh_private_key: ~/.ssh/id_rsa         # Path to SSH private key
+    ssh_port: 22                           # SSH port (default 22)
+    runs: 1                                # Number of crash cycles
+    timeout: 600                           # Seconds to wait for host recovery
+    kube_check: false                      # No Kubernetes API checks in standalone mode
+    soft_reboot: false                     # Hard crash (kernel panic), not graceful reboot

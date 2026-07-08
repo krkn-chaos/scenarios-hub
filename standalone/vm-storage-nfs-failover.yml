@@ -1,0 +1,41 @@
+#
+# VM Storage NFS Failover Chaos
+#
+# Purpose:
+#   Kills the NFS server process on a storage node to simulate an NFS
+#   failover event. Validates that VMs or applications using NFS-backed
+#   storage survive the outage and resume IO without data loss once the
+#   NFS service recovers.
+#
+# What it catches:
+#   - VMs that crash when NFS mount goes stale (EIO errors)
+#   - Applications that hang indefinitely on NFS operations (soft vs hard mount)
+#   - Data corruption from interrupted NFS writes during failover
+#   - CNV-79002: IO burst crashes VMI when storage is disrupted
+#   - Backup jobs that fail silently when NFS is unavailable
+#
+# Prerequisites:
+#   - SSH key-based access to the NFS server host
+#   - Know the NFS service name (nfs-server, nfs-kernel-server, etc.)
+#   - Clients should use hard mounts for production (this test validates that)
+#
+# Usage:
+#   1. Replace <NFS_SERVER_HOST> with the NFS server IP or hostname
+#   2. Adjust duration and recovery_timeout for your environment
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - vm_storage_chaos_scenarios:
+#            - ../scenarios-hub/standalone/vm-storage-nfs-failover.yml
+#
+
+vm_storage_chaos:
+  action: nfs_failover                     # Kill and restart NFS service
+  storage_targets:
+    - host: <NFS_SERVER_HOST>              # IP or hostname of NFS server
+      path: /var/lib/containers            # NFS export path to disrupt
+  ssh_user: root                           # SSH username on NFS server
+  ssh_private_key: ~/.ssh/id_rsa           # Path to SSH private key
+  duration: 120                            # Seconds to keep NFS service down
+  io_workers: 4                            # Concurrent IO workers for stress
+  io_bytes: 1G                            # Data volume per IO worker
+  verify_vm_recovery: true                 # Verify VMs recover after NFS returns
+  recovery_timeout: 300                    # Seconds to wait for VM recovery

@@ -1,0 +1,40 @@
+#
+# Standalone Network Latency Injection
+#
+# Purpose:
+#   Adds network latency to host interfaces via SSH using tc netem.
+#   Simulates degraded WAN links, cross-datacenter latency, or congested
+#   network segments without touching Kubernetes networking.
+#
+# What it catches:
+#   - Application timeouts from increased round-trip time
+#   - Database replication lag causing stale reads
+#   - Health check failures from slow responses
+#   - CNV-90425: VM performance degradation after migration
+#   - Load balancer evictions from backend response delays
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - tc (iproute2) installed on targets
+#   - Network interface names known (use `ip link show` to find them)
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Set interfaces to the correct network interfaces on target
+#   3. Adjust latency and duration for your test scenario
+#   4. Reference this file in config/config.yaml under chaos_scenarios:
+#        - network_chaos_scenarios:
+#            - ../scenarios-hub/standalone/network-latency-standalone.yml
+#
+
+network_chaos:
+  targets:
+    - <TARGET_HOST_1>                      # IP or hostname of target
+  ssh_user: root                           # SSH username
+  ssh_private_key: ~/.ssh/id_rsa           # Path to SSH private key
+  duration: 300                            # Duration in seconds to hold the fault
+  interfaces:                              # Network interfaces to inject latency on
+    - eth0                                 # Change to match your host (e.g. ens192, bond0)
+  execution: serial                        # serial or parallel interface injection
+  egress:
+    latency: 100ms                         # Latency to add to outgoing packets

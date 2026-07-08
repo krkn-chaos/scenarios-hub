@@ -1,0 +1,117 @@
+#
+# Krkn Standalone Configuration
+#
+# Purpose:
+#   General-purpose krkn configuration for standalone (non-Kubernetes) mode.
+#   Runs chaos scenarios against bare-metal hosts, VMs, or any SSH-accessible
+#   infrastructure without requiring a Kubernetes or OpenShift cluster.
+#
+# How to use:
+#   1. Edit the chaos_scenarios section below to reference your scenario files
+#   2. Uncomment the scenario types you want to run
+#   3. Run: python run_kraken.py --config config-standalone.yaml
+#
+# Key differences from Kubernetes mode:
+#   - execution_mode is set to "standalone"
+#   - kubeconfig_path is left empty (no cluster needed)
+#   - Cerberus health monitoring is disabled
+#   - Prometheus/Elasticsearch monitoring is optional
+#   - Scenarios use targets + SSH instead of label_selector + cloud_type
+#
+# NOTE: Scenario paths below (scenarios/standalone/...) are relative to the krkn
+# repository root. Copy the scenario YAMLs into krkn's scenarios/standalone/
+# directory, or adjust these paths to match your directory layout.
+
+kraken:
+    execution_mode: standalone             # Run without Kubernetes cluster
+    kubeconfig_path:                       # Leave empty for standalone mode
+    exit_on_failure: False                 # Continue running after a scenario fails
+    auto_rollback: True                    # Automatically undo chaos after duration
+    rollback_versions_directory:
+    publish_kraken_status: False
+    signal_state: RUN
+    signal_address: 0.0.0.0
+    port: 8081
+    chaos_scenarios:
+        # Uncomment and edit paths to the scenarios you want to run.
+        # Each scenario file contains SSH targets and credentials.
+        #
+        # Node scenarios (reboot, crash):
+        - node_scenarios:
+            - scenarios/standalone/ssh-node-reboot.yml
+        #    - scenarios/standalone/ssh-node-crash.yml
+        #
+        # Resource hog scenarios (CPU, memory, IO stress):
+        - hog_scenarios:
+            - scenarios/standalone/cpu-hog-standalone.yml
+        #    - scenarios/standalone/memory-hog-standalone.yml
+        #    - scenarios/standalone/io-hog-standalone.yml
+        #
+        # Network chaos scenarios (latency, partition):
+        - network_chaos_scenarios:
+            - scenarios/standalone/network-latency-standalone.yml
+        #    - scenarios/standalone/network-partition-standalone.yml
+        #
+        # Time chaos scenarios (clock skew):
+        - time_scenarios:
+            - scenarios/standalone/time-skew-standalone.yml
+        #
+        # Disk fill scenarios:
+        #- standalone_disk_fill_scenarios:
+        #    - scenarios/standalone/disk-fill-standalone.yml
+        #
+        # File permission chaos:
+        #- standalone_file_scenarios:
+        #    - scenarios/standalone/file-chmod-standalone.yml
+
+tunings:
+    wait_duration: 10                      # Seconds to wait between scenarios
+    iterations: 1                          # Number of times to run all scenarios
+    daemon_mode: False                     # Run once and exit (True = loop forever)
+
+performance_monitoring:
+    prometheus_url:                        # Optional: Prometheus endpoint URL
+    prometheus_bearer_token:
+    uuid:
+    enable_alerts: False
+    enable_metrics: False
+    alert_profile:
+    metrics_profile:
+    check_critical_alerts: False
+
+cerberus:
+    cerberus_enabled: False                # Disabled in standalone mode
+    cerberus_url:
+
+elastic:
+    enable_elastic: False                  # Set to True to send telemetry
+    elastic_url:
+    elastic_port: 32766
+    verify_certs: False
+    username:
+    password:
+    metrics_index: krkn-metrics
+    alerts_index: krkn-alerts
+    telemetry_index: krkn-telemetry
+
+telemetry:
+    enabled: False
+    api_url:
+    username:
+    password:
+    prometheus_backup: False
+    full_prometheus_backup: False
+    events_backup: False
+    logs_backup: False
+    backup_threads: 5
+    archive_path:
+    max_retries: 0
+    run_tag:
+    telemetry_group:
+
+resiliency:
+    resiliency_run_mode: disabled
+
+health_checks:
+
+kubevirt_checks:
