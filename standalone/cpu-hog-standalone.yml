@@ -1,0 +1,36 @@
+#
+# Standalone CPU Stress Test
+#
+# Purpose:
+#   Consumes CPU on bare-metal or VM hosts via SSH using stress-ng.
+#   Validates that applications degrade gracefully under CPU contention
+#   rather than crashing or producing corrupt output.
+#
+# What it catches:
+#   - Services that crash when starved of CPU (missing resource limits)
+#   - Liveness probes that timeout under CPU pressure (CNV-89810)
+#   - Scheduler starvation causing missed cron jobs or heartbeats
+#   - OOM kills triggered by CPU-bound processes allocating memory
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - stress-ng installed on targets (or will be installed by krkn)
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Adjust cpu-load-percentage and duration for your test
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - hog_scenarios:
+#            - ../scenarios-hub/standalone/cpu-hog-standalone.yml
+#
+
+hog-type: cpu
+targets:
+  - <TARGET_HOST_1>                        # IP or hostname of first target
+  - <TARGET_HOST_2>                        # IP or hostname of second target
+ssh_user: root                             # SSH username
+ssh_private_key: ~/.ssh/id_rsa             # Path to SSH private key
+node-selector: ""                          # Not used in standalone mode
+duration: 60                               # Duration in seconds to run stress
+workers: 0                                 # Number of CPU workers (0 = all cores)
+cpu-load-percentage: 90                    # Target CPU load percentage

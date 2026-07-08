@@ -1,0 +1,42 @@
+#
+# VM Live Migration Under Network Disruption
+#
+# Purpose:
+#   Triggers a VM live migration and simultaneously injects network latency
+#   on the migration path. Validates that the migration either completes
+#   successfully or rolls back cleanly without leaving duplicate pods or
+#   corrupted VM state.
+#
+# What it catches:
+#   - CNV-89391: Dual virt-launcher pods after failed migration (data corruption)
+#   - Migration timeouts that leave VM in an inconsistent state
+#   - Network faults causing migration data stream corruption
+#   - CNV-90425: Performance degradation after VMware-to-CNV migration
+#   - Split-brain where both source and target claim VM ownership
+#
+# Prerequisites:
+#   - SSH key-based access to the VM host nodes
+#   - A running VM that supports live migration
+#   - Network interface name for the migration network (e.g. br-ex)
+#
+# Usage:
+#   1. Replace <MIGRATED_VM_NAME> and <NAMESPACE> with your VM details
+#   2. Set fault_params to match your migration network interface
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - vm_migration_chaos_scenarios:
+#            - ../scenarios-hub/standalone/vm-migration-network-disruption.yml
+#
+
+vm_migration_chaos:
+  vm_name: <MIGRATED_VM_NAME>              # Name of the VM to migrate
+  vm_namespace: <NAMESPACE>                # Namespace where the VM runs
+  migration_action: trigger_and_disrupt    # Start migration then inject fault
+  fault_type: network_latency              # Type of fault to inject during migration
+  fault_params:
+    latency: 200ms                         # Latency to add to migration network
+    interface: br-ex                       # Network interface used for migration
+    duration: 30                           # Seconds to hold the fault active
+  ssh_user: core                           # SSH username on host nodes
+  ssh_private_key: ~/.ssh/id_rsa           # Path to SSH private key
+  verify_no_dual_pods: true                # Verify no duplicate virt-launcher pods
+  timeout: 600                             # Seconds to wait for migration completion

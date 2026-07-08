@@ -1,0 +1,35 @@
+#
+# Standalone Memory Stress Test
+#
+# Purpose:
+#   Allocates memory on bare-metal or VM hosts via SSH using stress-ng.
+#   Validates that the system handles memory pressure without critical
+#   service crashes or unrecoverable OOM conditions.
+#
+# What it catches:
+#   - OOM killer targeting the wrong process (critical services killed)
+#   - Memory leaks exposed under pressure (services that never release)
+#   - Swap thrashing causing application timeouts
+#   - Database buffer pools evicted causing performance collapse
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - stress-ng installed on targets (or will be installed by krkn)
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Adjust memory-vm-bytes to a safe value for your hosts
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - hog_scenarios:
+#            - ../scenarios-hub/standalone/memory-hog-standalone.yml
+#
+
+hog-type: memory
+targets:
+  - <TARGET_HOST_1>                        # IP or hostname of target
+ssh_user: root                             # SSH username
+ssh_private_key: ~/.ssh/id_rsa             # Path to SSH private key
+node-selector: ""                          # Not used in standalone mode
+duration: 60                               # Duration in seconds to hold memory
+workers: 1                                 # Number of memory workers
+memory-vm-bytes: 256M                      # Amount of memory each worker allocates

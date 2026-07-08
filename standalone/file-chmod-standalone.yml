@@ -1,0 +1,37 @@
+#
+# Standalone File Permission Chaos via SSH
+#
+# Purpose:
+#   Changes file permissions on bare-metal or VM hosts via SSH using chmod.
+#   Simulates accidental permission changes that break application access
+#   to critical configuration files, sockets, or data directories.
+#
+# What it catches:
+#   - Services that crash when config files become unreadable
+#   - Socket permission errors breaking inter-process communication
+#   - Applications that fail silently instead of reporting permission denied
+#   - Security tools that do not alert on critical file permission changes
+#   - Services that cannot restart because pid/lock files are inaccessible
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - Choose file_path carefully (do not target /etc/shadow or SSH keys)
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Set file_path to the config or data file you want to test
+#   3. Set permissions to the restrictive mode (e.g. "000" for no access)
+#   4. Original permissions are restored after duration expires
+#   5. Reference this file in config/config.yaml under chaos_scenarios:
+#        - standalone_file_scenarios:
+#            - ../scenarios-hub/standalone/file-chmod-standalone.yml
+#
+
+targets:
+  - <TARGET_HOST_1>                        # IP or hostname of target
+ssh_user: root                             # SSH username
+ssh_private_key: ~/.ssh/id_rsa             # Path to SSH private key
+action: chmod                              # Permission change action
+file_path: /etc/nginx/nginx.conf           # Path to file to change permissions on
+permissions: "000"                         # New permissions (restored after duration)
+duration: 60                               # Duration in seconds before restoring

@@ -1,0 +1,40 @@
+#
+# Standalone Node Reboot via SSH
+#
+# Purpose:
+#   Reboots bare-metal or VM hosts over SSH without requiring a Kubernetes
+#   control plane. Validates that services restart cleanly after an
+#   unexpected reboot and that no data corruption occurs on disk.
+#
+# What it catches:
+#   - Services that fail to start on boot (missing systemd enable)
+#   - Filesystem corruption from unclean shutdown
+#   - Network interfaces that do not come back with correct IP/routes
+#   - CNV-83327: Windows VM disks going offline after host reboot
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts (no password prompts)
+#   - Target hosts must be reachable from the machine running krkn
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Set ssh_user and ssh_private_key to match your environment
+#   3. Reference this file in config/config.yaml under chaos_scenarios:
+#        - node_scenarios:
+#            - ../scenarios-hub/standalone/ssh-node-reboot.yml
+#
+
+node_scenarios:
+  - actions:
+      - node_reboot_scenario
+    cloud_type: ssh
+    targets:
+      - <TARGET_HOST_1>                    # IP or hostname of first target
+      - <TARGET_HOST_2>                    # IP or hostname of second target
+    ssh_user: root                         # SSH username with reboot privileges
+    ssh_private_key: ~/.ssh/id_rsa         # Path to SSH private key
+    ssh_port: 22                           # SSH port (default 22)
+    runs: 1                                # Number of times to run the reboot
+    timeout: 360                           # Seconds to wait for host to come back
+    kube_check: false                      # No Kubernetes API checks in standalone mode
+    soft_reboot: true                      # Use graceful reboot (false = hard reset)

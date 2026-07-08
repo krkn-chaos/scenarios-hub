@@ -1,0 +1,41 @@
+#
+# Standalone Network Partition via SSH
+#
+# Purpose:
+#   Creates a network partition using iptables rules via SSH. Simulates a
+#   split-brain condition where a host is completely cut off from specific
+#   peers or subnets. Tests that distributed systems handle partitions
+#   without data corruption or split-brain conflicts.
+#
+# What it catches:
+#   - Split-brain in clustered databases (etcd, Galera, Patroni)
+#   - Consensus protocol failures when quorum is lost
+#   - Application writes accepted on both sides of a partition
+#   - Monitoring blind spots where alerts do not fire during partition
+#   - Recovery race conditions when partition heals
+#
+# Prerequisites:
+#   - SSH key-based access to target hosts
+#   - iptables installed on targets
+#   - Understand which traffic you are blocking before running
+#
+# Usage:
+#   1. Replace <TARGET_HOST_*> with real IPs or hostnames
+#   2. Set interfaces to the correct network interfaces on target
+#   3. Packet loss of 100% simulates a full partition
+#   4. Reference this file in config/config.yaml under chaos_scenarios:
+#        - network_chaos_scenarios:
+#            - ../scenarios-hub/standalone/network-partition-standalone.yml
+#
+
+network_chaos:
+  targets:
+    - <TARGET_HOST_1>                      # IP or hostname of target to partition
+  ssh_user: root                           # SSH username
+  ssh_private_key: ~/.ssh/id_rsa           # Path to SSH private key
+  duration: 120                            # Duration in seconds to hold the partition
+  interfaces:                              # Network interfaces to apply partition on
+    - eth0                                 # Change to match your host (e.g. ens192, bond0)
+  execution: serial                        # serial or parallel interface injection
+  egress:
+    loss: 100%                             # 100% packet loss = full network partition
